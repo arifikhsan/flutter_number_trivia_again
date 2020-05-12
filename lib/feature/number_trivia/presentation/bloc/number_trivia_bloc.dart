@@ -1,8 +1,12 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_number_trivia_again/core/error/failure/cache_failure.dart';
+import 'package:flutter_number_trivia_again/core/error/failure/failure.dart';
+import 'package:flutter_number_trivia_again/core/error/failure/server_failure.dart';
 import 'package:flutter_number_trivia_again/core/global/constant.dart';
 import 'package:flutter_number_trivia_again/core/usecase/no_params.dart';
 import 'package:flutter_number_trivia_again/core/usecase/params.dart';
@@ -39,32 +43,57 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
           inputConverter.stringToUnsignedInteger(event.numberString);
       yield* inputEither.fold(
         (failure) async* {
-          yield Error(message: Constant.INVALID_INPUT_FAILURE_MESSAGE);
+          yield Error(message: INVALID_INPUT_FAILURE_MESSAGE);
         },
         (integer) async* {
           yield Loading();
+
           final failureOrTrivia =
               await getConcreteNumberTrivia(Params(number: integer));
-          yield* failureOrTrivia.fold((failure) async* {
-            yield Error(message: Constant.SERVER_FAILURE_MESSAGE);
-          }, (trivia) async* {
-            yield Loaded(trivia: trivia);
-          });
+          yield* _eitherLoadedOrErrorState(failureOrTrivia);
+          // yield* failureOrTrivia.fold((failure) async* {
+          //   yield Error(message: SERVER_FAILURE_MESSAGE);
+          // }, (trivia) async* {
+          //   yield Loaded(trivia: trivia);
+          // });
         },
       );
     } else if (event is GetTriviaForRandomNumber) {
       yield Loading();
       final failureOrTrivia = await getRandomNumberTrivia(NoParams());
-      yield* failureOrTrivia.fold(
-        (failure) async* {
-          yield Error(message: Constant.SERVER_FAILURE_MESSAGE);
-        },
-        (trivia) async* {
-          yield Loaded(trivia: trivia);
-        },
-      );
+      yield* _eitherLoadedOrErrorState(failureOrTrivia);
+      // yield* failureOrTrivia.fold(
+      //   (failure) async* {
+      //     yield Error(message: SERVER_FAILURE_MESSAGE);
+      //   },
+      //   (trivia) async* {
+      //     yield Loaded(trivia: trivia);
+      //   },
+      // );
     } else if (event is ResetTrivia) {
       yield Empty();
+    }
+  }
+
+  Stream<NumberTriviaState> _eitherLoadedOrErrorState(
+    Either<Failure, NumberTrivia> failureOrTrivia,
+  ) async* {
+    yield failureOrTrivia.fold(
+      (failure) => Error(message: _mapFailureToMessage(failure)),
+      (trivia) => Loaded(trivia: trivia),
+    );
+  }
+
+  String _mapFailureToMessage(Failure failure) {
+    switch (failure.runtimeType) {
+      case ServerFailure:
+        return SERVER_FAILURE_MESSAGE;
+        break;
+      case CacheFailure:
+        return CACHE_FAILURE_MESSAGE;
+        break;
+      default:
+        return 'Unexpected error';
     }
   }
 }
