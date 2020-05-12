@@ -9,7 +9,7 @@ class InputConverter {
       if (integer < 0) throw FormatException();
       return Right(integer);
     } on FormatException {
-      return Left(InvalidInputFailure())
+      return Left(InvalidInputFailure());
     }
   }
 }

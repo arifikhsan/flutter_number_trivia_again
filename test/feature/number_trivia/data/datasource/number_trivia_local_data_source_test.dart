@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_number_trivia_again/core/error/exception/cache_exception.dart';
 import 'package:flutter_number_trivia_again/feature/number_trivia/data/datasource/number_trivia_local_data_source.dart';
 import 'package:flutter_number_trivia_again/feature/number_trivia/data/model/number_trivia_model.dart';
 import 'package:flutter_number_trivia_again/helper/fixture_reader.dart';
