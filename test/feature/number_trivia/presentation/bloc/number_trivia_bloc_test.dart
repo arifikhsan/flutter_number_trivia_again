@@ -1,9 +1,9 @@
-import 'package:bloc_test/bloc_test.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_number_trivia_again/core/error/failure/cache_failure.dart';
 import 'package:flutter_number_trivia_again/core/error/failure/invalid_input_failure.dart';
 import 'package:flutter_number_trivia_again/core/error/failure/server_failure.dart';
 import 'package:flutter_number_trivia_again/core/global/constant.dart';
+import 'package:flutter_number_trivia_again/core/usecase/no_params.dart';
 import 'package:flutter_number_trivia_again/core/usecase/params.dart';
 import 'package:flutter_number_trivia_again/core/util/input_converter.dart';
 import 'package:flutter_number_trivia_again/feature/number_trivia/domain/entity/number_trivia.dart';
@@ -166,7 +166,97 @@ void main() {
     });
   });
 
-  group('GetTriviaForRandomNumber', () {});
+  group('GetTriviaForRandomNumber', () {
+    final testNumberTrivia = NumberTrivia(number: 1, text: 'test trivia');
 
-  group('ResetTrivia', () {});
+    void setUpMockGetRandomNumberTriviaSuccess() =>
+        when(mockGetRandomNumberTrivia(any))
+            .thenAnswer((_) async => Right(testNumberTrivia));
+
+    group('success test', () {
+      test(
+        'should get data from the concrete usecase',
+        () async {
+          // arrange
+          setUpMockGetRandomNumberTriviaSuccess();
+          // act
+          bloc.add(GetTriviaForRandomNumber());
+          await untilCalled(mockGetRandomNumberTrivia(any));
+          // assert
+          verify(
+            mockGetRandomNumberTrivia(NoParams()),
+          );
+        },
+      );
+
+      test(
+        'should emit [Empty, Loading, Loaded] when data is gotten successfully',
+        () async {
+          // arrange
+          setUpMockGetRandomNumberTriviaSuccess();
+          // assert later
+          final expected = [
+            Empty(),
+            Loading(),
+            Loaded(trivia: testNumberTrivia),
+          ];
+          expectLater(bloc, emitsInOrder(expected));
+          // act
+          bloc.add(GetTriviaForRandomNumber());
+        },
+      );
+    });
+
+    group('error test', () {
+      test(
+        'should emit [Empty, Loading, Error] when ServerFailure',
+        () async {
+          // arrange
+          setUpMockGetRandomNumberTriviaSuccess();
+          when(mockGetRandomNumberTrivia(any))
+              .thenAnswer((_) async => Left(ServerFailure()));
+          // assert later
+          final expected = [
+            Empty(),
+            Loading(),
+            Error(message: SERVER_FAILURE_MESSAGE),
+          ];
+          expectLater(bloc, emitsInOrder(expected));
+          // act
+          bloc.add(GetTriviaForRandomNumber());
+        },
+      );
+
+      test(
+        'should emit [Empty, Loading, Error] when CacheFailure',
+        () async {
+          // arrange
+          setUpMockGetRandomNumberTriviaSuccess();
+          when(mockGetRandomNumberTrivia(any))
+              .thenAnswer((_) async => Left(CacheFailure()));
+          // assert later
+          final expected = [
+            Empty(),
+            Loading(),
+            Error(message: CACHE_FAILURE_MESSAGE),
+          ];
+          expectLater(bloc, emitsInOrder(expected));
+          // act
+          bloc.add(GetTriviaForRandomNumber());
+        },
+      );
+    });
+  });
+
+  group('ResetTrivia', () {
+    test(
+      'should reset state to Empty',
+      () async {
+        // assert later
+        expectLater(bloc, emits(Empty()));
+        // act
+        bloc.add(ResetTrivia());
+      },
+    );
+  });
 }
