@@ -58,19 +58,20 @@ void main() {
     void setUpMockGetConcreteNumberTriviaSuccess() =>
         when(mockGetConcreteNumberTrivia(any))
             .thenAnswer((_) async => Right(testNumberTrivia));
-    test(
-      'should call the InputConverter to validate and convert the string to an unsigned integer',
-      () async {
-        // arrange
-        setUpMockInputConverterSuccess();
-        // act
-        bloc.add(GetTriviaForConcreteNumber(testNumberString));
-        await untilCalled(
-            mockInputConverter.stringToUnsignedInteger(testNumberString));
-        // assert
-        verify(mockInputConverter.stringToUnsignedInteger(testNumberString));
-      },
-    );
+
+    // test(
+    //   'should call the InputConverter to validate and convert the string to an unsigned integer',
+    //   () async {
+    //     // arrange
+    //     setUpMockInputConverterSuccess();
+    //     // act
+    //     bloc.add(GetTriviaForConcreteNumber(testNumberString));
+    //     await untilCalled(
+    //         mockInputConverter.stringToUnsignedInteger(testNumberString));
+    //     // assert
+    //     verify(mockInputConverter.stringToUnsignedInteger(testNumberString));
+    //   },
+    // );
 
     group('success test', () {
       test(
